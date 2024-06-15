@@ -1,6 +1,5 @@
 const express = require('express');
 const app = express();
-
 const admin = require('firebase-admin');
 const credentials = require('./key.json');
 
