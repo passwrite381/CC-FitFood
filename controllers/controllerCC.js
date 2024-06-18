@@ -272,3 +272,158 @@ exports.getUserById = async (req, res) => {
         res.status(500).json({ message: 'Server error' });
     }
 };
+
+exports.storeUserHealthData = async (req, res) => {
+    try {
+        const authHeader = req.headers['authorization'];
+        const token = authHeader && authHeader.split(' ')[1];
+        if (!token) {
+            return res.status(401).json({ message: 'Unauthorized' });
+        }
+
+        jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
+            if (err) {
+                return res.status(401).json({ message: 'Unauthorized' });
+            }
+
+            const { user_id } = req.params;
+            const { weight, height } = req.body;
+
+            if (!weight || !height) {
+                return res.status(400).json({ message: 'Weight and height are required' });
+            }
+
+            const userRef = db.collection('user-data').doc(user_id);
+            const userDoc = await userRef.get();
+            if (!userDoc.exists) {
+                return res.status(404).json({ message: 'User not found' });
+            }
+
+            const bmiUser = weight / ((height / 100) ** 2);
+            let label = '';
+
+            if (bmiUser < 18.5) {
+                label = "Berat badan anda kurang";
+            } else if (bmiUser >= 18.5 && bmiUser < 24.9) {
+                label = "Berat badan anda normal";
+            } else if (bmiUser >= 25 && bmiUser < 29.9) {
+                label = "Anda kelebihan berat badan";
+            } else if (bmiUser >= 30) {
+                label = "Anda Obesitas!!";
+            }
+
+            const healthDataRef = db.collection('user-health-data').doc(user_id);
+            await healthDataRef.set({ weight, height, bmiUser, label, user_id, updated_at: new Date() });
+
+            res.json({ message: 'User health data stored successfully', data: { user_id, weight, height, bmiUser, label } });
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+exports.getUserHealthData = async (req, res) => {
+    try {
+        const authHeader = req.headers['authorization'];
+        const token = authHeader && authHeader.split(' ')[1];
+        if (!token) {
+            return res.status(401).json({ message: 'Unauthorized' });
+        }
+
+        jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
+            if (err) {
+                return res.status(401).json({ message: 'Unauthorized' });
+            }
+
+            const { user_id } = req.params;
+
+            const userRef = db.collection('user-data').doc(user_id);
+            const userDoc = await userRef.get();
+            if (!userDoc.exists) {
+                return res.status(404).json({ message: 'User not found' });
+            }
+
+            const healthDataRef = db.collection('user-health-data').where('user_id', '==', user_id);
+            const healthDataSnapshot = await healthDataRef.get();
+
+            if (healthDataSnapshot.empty) {
+                return res.status(404).json({ message: 'No health data found for this user' });
+            }
+
+            let healthData = [];
+            healthDataSnapshot.forEach(doc => {
+                healthData.push(doc.data());
+            });
+
+            res.json({ message: 'User health data retrieved successfully', data: healthData });
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+exports.updateUserHealthData = async (req, res) => {
+    try {
+        const authHeader = req.headers['authorization'];
+        const token = authHeader && authHeader.split(' ')[1];
+        if (!token) {
+            return res.status(401).json({ message: 'Unauthorized' });
+        }
+
+        jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
+            if (err) {
+                return res.status(401).json({ message: 'Unauthorized' });
+            }
+
+            const { user_id } = req.params;
+            const { weight, height } = req.body;
+
+            
+            if (!weight || !height) {
+                return res.status(400).json({ message: 'Weight and height are required' });
+            }
+
+            const userRef = db.collection('user-data').doc(user_id);
+            const userDoc = await userRef.get();
+            if (!userDoc.exists) {
+                return res.status(404).json({ message: 'User not found' });
+            }
+
+            const bmiUser = weight / ((height / 100) ** 2);
+            let label = '';
+
+            if (bmiUser < 18.5) {
+                label = "Berat badan anda kurang";
+            } else if (bmiUser >= 18.5 && bmiUser < 24.9) {
+                label = "Berat badan anda normal";
+            } else if (bmiUser >= 25 && bmiUser < 29.9) {
+                label = "Anda kelebihan berat badan";
+            } else if (bmiUser >= 30) {
+                label = "Anda Obesitas!!";
+            }
+
+            const healthDataRef = db.collection('user-health-data').where('user_id', '==', user_id);
+            const healthDataSnapshot = await healthDataRef.get();
+
+            if (healthDataSnapshot.empty) {
+                return res.status(404).json({ message: 'Health data not found' });
+            }
+
+            const healthDataDoc = healthDataSnapshot.docs[0];
+            await healthDataDoc.ref.update({
+                weight,
+                height,
+                bmiUser,
+                label,
+                updated_at: new Date()
+            });
+
+            res.json({ message: 'Health data updated successfully', data: { user_id, weight, height, bmiUser, label } });
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};

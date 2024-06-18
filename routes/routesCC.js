@@ -18,4 +18,9 @@ routesCC.get('/getArticleById/:id', controllerCC.getArticleById);
 routesCC.get('/getArticlesByCategory', controllerCC.getArticlesByCategory);
 routesCC.get('/getArticleByIdAndCategory/:id', controllerCC.getArticleByIdAndCategory);
 
+//BMI
+routesCC.post('/users/:user_id/health', controllerCC.storeUserHealthData);
+routesCC.get('/users/:user_id/health', controllerCC.getUserHealthData);
+routesCC.put('/users/:user_id/health', controllerCC.updateUserHealthData);
+
 module.exports = routesCC;
