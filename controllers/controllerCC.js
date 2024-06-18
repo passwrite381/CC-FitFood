@@ -395,13 +395,13 @@ exports.updateUserHealthData = async (req, res) => {
             let label = '';
 
             if (bmiUser < 18.5) {
-                label = "Berat badan anda kurang";
+                label = "underweight";
             } else if (bmiUser >= 18.5 && bmiUser < 24.9) {
-                label = "Berat badan anda normal";
+                label = "normal";
             } else if (bmiUser >= 25 && bmiUser < 29.9) {
-                label = "Anda kelebihan berat badan";
+                label = "overweight";
             } else if (bmiUser >= 30) {
-                label = "Anda Obesitas!!";
+                label = "obesity";
             }
 
             const healthDataRef = db.collection('user-health-data').where('user_id', '==', user_id);
