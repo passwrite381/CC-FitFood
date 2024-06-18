@@ -6,8 +6,9 @@ const userCollection = db.collection('users');
 
 const User = {
   async createUser(data) {
-    const { id, fullName, email, password } = data;
+    const { id, fullName, email, password, gender } = data;
     const hashedPassword = await bcrypt.hash(password, 10);
+
     const newUser = {
       id,
       fullName,
@@ -15,6 +16,7 @@ const User = {
       password: hashedPassword,
       createdAt: new Date(),
       updatedAt: new Date(),
+      gender
     };
 
     const userRef = userCollection.doc(id);

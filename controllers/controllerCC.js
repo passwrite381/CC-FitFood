@@ -75,15 +75,19 @@ exports.getArticleByIdAndCategory = async (req, res) => {
 // Register
 exports.registerUser = async (req, res) => {
     try {
-        const { username, email, password, dateOfBirth } = req.body;
+        const { username, email, password, dateOfBirth, gender } = req.body;
 
         // Validation
-        if (!username || !email || !password || !dateOfBirth) {
+        if (!username || !email || !password || !dateOfBirth || !gender) {
             return res.status(400).json({ message: 'All fields are required' });
         }
 
         if (username.length < 8 || password.length < 8) {
             return res.status(400).json({ message: 'Full name and password must be at least 8 characters long' });
+        }
+         const allowedGenders = ['male', 'female'];
+         if (!allowedGenders.includes(gender.toLowerCase())) {
+            return res.status(400).json({ message: 'Gender must be either "male" or "female"' });
         }
 
         const userRef = db.collection('user-data');
@@ -95,7 +99,7 @@ exports.registerUser = async (req, res) => {
         const user_id = nanoid(10); // Generate a unique ID with length 10
         const hashedPassword = await bcrypt.hash(password, 10);
         const createdAt = new Date(); // Get current date and time
-        await userRef.doc(user_id).set({ user_id, username, email, password: hashedPassword, date_of_birth: dateOfBirth, created_at: createdAt });
+        await userRef.doc(user_id).set({ user_id, username, email, password: hashedPassword, date_of_birth: dateOfBirth, gender, created_at: createdAt });
 
         const response = {
             status: 'Success',
