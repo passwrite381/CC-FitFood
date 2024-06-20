@@ -2,6 +2,7 @@ const express = require('express');
 const middlewareCC = require('../middleware/middlewareCC');
 const controllerCC = require('../controllers/controllerCC.js');
 const controllerReccomendation = require('../controllers/controllerReccommend.js');
+const controllerArticle = require('../controllers/controllerArticle.js');
 const routesCC = express.Router();
 
 //Login
@@ -14,10 +15,11 @@ routesCC.put('/users/:id', middlewareCC, controllerCC.updateUser);
 routesCC.delete('/users/:id', middlewareCC, controllerCC.deleteUser);
 
 //Artikel
-routesCC.get('/getArticle', controllerCC.getArticles);
-routesCC.get('/getArticleById/:id', controllerCC.getArticleById);
-routesCC.get('/getArticlesByCategory', controllerCC.getArticlesByCategory);
-routesCC.get('/getArticleByIdAndCategory/:id', controllerCC.getArticleByIdAndCategory);
+routesCC.get('/getArticle', controllerArticle.getArticles);
+routesCC.get('/getArticleById/:id', controllerArticle.getArticleById);
+routesCC.get('/getArticlesByCategory', controllerArticle.getArticlesByCategory);
+routesCC.get('/getArticleByIdAndCategory/:id', controllerArticle.getArticleByIdAndCategory);
+routesCC.get('/getArticleByLabel', controllerArticle.getArticleByLabel);
 
 //BMI
 routesCC.post('/users/:user_id/health', controllerCC.storeUserHealthData);
