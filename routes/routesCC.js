@@ -1,6 +1,7 @@
 const express = require('express');
 const middlewareCC = require('../middleware/middlewareCC');
 const controllerCC = require('../controllers/controllerCC.js');
+const controllerReccomendation = require('../controllers/controllerReccommend.js');
 const routesCC = express.Router();
 
 //Login
@@ -23,4 +24,6 @@ routesCC.post('/users/:user_id/health', controllerCC.storeUserHealthData);
 routesCC.get('/users/:user_id/health', controllerCC.getUserHealthData);
 routesCC.put('/users/:user_id/health', controllerCC.updateUserHealthData);
 
+routesCC.get('/getFood', controllerReccomendation.getFood);
+routesCC.get('/getExercise', controllerReccomendation.getExercise);
 module.exports = routesCC;

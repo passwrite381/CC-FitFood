@@ -72,7 +72,6 @@ exports.getArticleByIdAndCategory = async (req, res) => {
 };
 
 // Register
-// Register
 exports.registerUser = async (req, res) => {
     try {
         const { username, email, password, dateOfBirth, gender } = req.body;
@@ -82,7 +81,7 @@ exports.registerUser = async (req, res) => {
             return res.status(400).json({ message: 'All fields are required' });
         }
 
-        if (username.length < 8 || password.length < 8) {
+        if (username.length < 1 || password.length < 8) {
             return res.status(400).json({ message: 'Full name and password must be at least 8 characters long' });
         }
          const allowedGenders = ['male', 'female'];
@@ -114,7 +113,6 @@ exports.registerUser = async (req, res) => {
     }
 };
 
-
 // Login
 exports.loginUser = async (req, res) => {
     try {
@@ -139,7 +137,7 @@ exports.loginUser = async (req, res) => {
             return res.status(401).json({ message: 'Invalid password' });
         }
 
-        const token = jwt.sign({ id: user.user_id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '15m' });
+        const token = jwt.sign({ id: user.user_id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '60m' });
         res.json({ message: 'Login successful', token, user });
     } catch (error) {
         console.error(error);
@@ -149,35 +147,23 @@ exports.loginUser = async (req, res) => {
 
 exports.updateUser = async (req, res) => {
     try {
-        const authHeader = req.headers['authorization'];
-        const token = authHeader && authHeader.split(' ')[1];
-        if (!token) {
-            return res.status(401).json({ message: 'Unauthorized' });
+        const { id } = req.params;
+        const { username, email, password } = req.body;
+        const userRef = db.collection('user-data').doc(id);
+        const userDoc = await userRef.get();
+        if (!userDoc.exists) {
+            return res.status(404).json({ message: 'User not found' });
         }
 
-        jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
-            if (err) {
-                return res.status(401).json({ message: 'Unauthorized' });
-            }
+        // Validation
+        if (!username || !email || !password) {
+            return res.status(400).json({ message: 'All fields are required' });
+        }
 
-            const { id } = req.params;
-            const { username, email, password } = req.body;
-            const userRef = db.collection('user-data').doc(id);
-            const userDoc = await userRef.get();
-            if (!userDoc.exists) {
-                return res.status(404).json({ message: 'User not found' });
-            }
+        const hashedPassword = await bcrypt.hash(password, 10);
+        await userRef.update({ username, email, password: hashedPassword });
 
-            // Validation
-            if (!username || !email || !password) {
-                return res.status(400).json({ message: 'All fields are required' });
-            }
-
-            const hashedPassword = await bcrypt.hash(password, 10);
-            await userRef.update({ username, email, password: hashedPassword });
-
-            res.json({ message: 'User updated successfully', user: {id, username, email } });
-        });
+        res.json({ message: 'User updated successfully', user: {id, username, email } });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error' });
@@ -307,13 +293,13 @@ exports.storeUserHealthData = async (req, res) => {
             let label = '';
 
             if (bmiUser < 18.5) {
-                label = "Berat badan anda kurang";
+                label = "underweight";
             } else if (bmiUser >= 18.5 && bmiUser < 24.9) {
-                label = "Berat badan anda normal";
+                label = "ideal";
             } else if (bmiUser >= 25 && bmiUser < 29.9) {
-                label = "Anda kelebihan berat badan";
+                label = "overweight";
             } else if (bmiUser >= 30) {
-                label = "Anda Obesitas!!";
+                label = "obesity";
             }
 
             const healthDataRef = db.collection('user-health-data').doc(user_id);
@@ -401,7 +387,7 @@ exports.updateUserHealthData = async (req, res) => {
             if (bmiUser < 18.5) {
                 label = "underweight";
             } else if (bmiUser >= 18.5 && bmiUser < 24.9) {
-                label = "normal";
+                label = "ideal";
             } else if (bmiUser >= 25 && bmiUser < 29.9) {
                 label = "overweight";
             } else if (bmiUser >= 30) {
